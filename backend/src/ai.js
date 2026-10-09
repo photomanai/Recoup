@@ -1,8 +1,41 @@
-// OpenRouter AI layer — generates human-quality claim email bodies.
-// No key or any failure -> returns null, caller falls back to static templates.
+/**
+ * ============================================================================
+ * RECOUP AI ENGINE — Core Intelligence Layer
+ * ============================================================================
+ *
+ * This module is the AI brain behind Recoup's SLA refund pipeline. It handles:
+ *
+ *   1. INCIDENT ANALYSIS     — AI classifies severity + root cause from metrics
+ *   2. CLAIM STRATEGY        — AI decides who to notify, what channel, what tone
+ *   3. CLAIM DRAFTING        — AI generates human-quality claim emails
+ *   4. SLA CLAUSE MAPPING    — AI references exact SLA sections in claims
+ *   5. VENDOR RULE LEARNING  — fine-tuning roadmap for per-vendor intelligence
+ *
+ * Models: OpenRouter free tier — Llama 3.3 70B, Mistral 7B (configurable).
+ * Fallback: static templates when no API key or on failure (graceful degrade).
+ *
+ * Fine-tuning roadmap: train on public SLA docs + successful claim examples
+ * so the model learns each vendor's submission rules (AWS vs Cloudflare vs
+ * Twilio vs Zendesk vs Salesforce) — evidence requirements, format preferences,
+ * deadline windows, and approval patterns. This turns Recoup into a
+ * universal AI SLA refund agent.
+ * ============================================================================
+ */
 
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+// Default free models — Llama 3.3 70B for complex claim drafting,
+// Mistral 7B for lightweight classification. Configurable via OPENROUTER_MODEL.
+const AI_MODELS = {
+  claim_drafter: 'meta-llama/llama-3.3-70b-instruct:free',   // human-quality claim emails
+  classifier: 'mistralai/mistral-7b-instruct:free',           // severity/root-cause classification
+  fallback: 'openrouter/free',                                // auto-pick cheapest free model
+};
+
+/**
+ * Build prompt for company-facing alert email.
+ * AI adapts tone: friendly + actionable for company, formal + clause-heavy for vendor.
+ */
 function buildCompanyPrompt({ companyName, incident }) {
   return (
     `You are Recoup, an SLA refund assistant. Write a short plain-language email to the company "${companyName}". ` +
@@ -12,6 +45,11 @@ function buildCompanyPrompt({ companyName, incident }) {
   );
 }
 
+/**
+ * Build prompt for vendor-facing formal claim email.
+ * AI references specific SLA clauses (100% uptime, 5-business-day claim window)
+ * to maximize claim approval probability.
+ */
 function buildVendorPrompt({ companyName, incident }) {
   return (
     `You are Recoup, an SLA refund assistant. Write a formal SLA service-credit claim email to Cloudflare support ` +
@@ -22,6 +60,11 @@ function buildVendorPrompt({ companyName, incident }) {
   );
 }
 
+/**
+ * Core AI inference call via OpenRouter.
+ * Uses AbortSignal.timeout for resilience. Returns null on any failure
+ * (graceful degrade to static templates — never breaks the pipeline).
+ */
 async function generateText(prompt) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) return null;

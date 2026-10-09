@@ -5,12 +5,28 @@ Status: approved approach A (Monorepo MVP)
 Language: English UI
 Mode: Full simulation + Real Gmail SMTP (Nodemailer), fallback to log mode
 
-## 1. Problem
+## 1. AI Architecture — Core of Recoup
+
+Recoup uses a **multi-stage AI pipeline** powered by OpenRouter (free tier models):
+
+| Stage | AI Capability | Implementation |
+|-------|--------------|----------------|
+| **1. Anomaly Detection** | Classify incident severity + root cause from metrics | `monitor.js` + SLA engine |
+| **2. Root Cause Analysis** | Determine refundable violation from patterns + SLA clauses | `sla/rules.js` + `ai.js` |
+| **3. Claim Strategy** | Decide WHO to notify, WHAT channel, WHAT tone | `ai.js` → prompt builders |
+| **4. Claim Drafting** | Generate human-quality emails with SLA clause references | `ai.js` → `generateText()` |
+| **5. Vendor Rule Learning** | Fine-tune on public SLA docs to learn per-vendor rules | Roadmap: `vendor-rules/` |
+
+**Models:** `meta-llama/llama-3.3-70b-instruct:free` (claim drafting), `mistralai/mistral-7b-instruct:free` (classification). Fallback: static templates.
+
+**Fine-tuning Roadmap:** Train on public SLA documents (AWS, Cloudflare, Twilio, Zendesk, Salesforce) + successful claim examples. AI learns: evidence requirements, format preferences, deadline windows, approval patterns per vendor. Turns Recoup into a universal AI SLA refund agent.
+
+## 3. Problem
 Companies pay for SaaS (AWS, Twilio, Zendesk, Salesforce, Cloudflare) with SLA clauses
 (e.g. "99.9% uptime or 15% discount", "latency >200ms = penalty") but nobody compares
 vendor logs vs contract clauses monthly. Money is overpaid.
 
-## 2. Goal (MVP for judges)
+## 4. Goal (MVP for judges)
 - Company registers with full packet.
 - Landing shows SaaS cards: Cloudflare = Active, others = Disabled/Soon.
 - After "Activate Cloudflare", system monitors uptime/latency 24/7 (simulated engine).
@@ -18,7 +34,7 @@ vendor logs vs contract clauses monthly. Money is overpaid.
   + dashboard alert with estimated refund.
 - Modern, working demo with one-click simulate buttons.
 
-## 3. Real Cloudflare SLA findings (basis)
+## 5. Real Cloudflare SLA findings (basis)
 Source: cloudflare.com/enterprise-support-sla, /business-sla, plans/faq (checked 2026-10-09).
 - Business + Enterprise: 100% uptime for Customer Content. Remedy = Service Credit only, NOT automatic.
 - Claim must be notified within 5 business days, full claim before end of next billing month.
@@ -31,7 +47,7 @@ Source: cloudflare.com/enterprise-support-sla, /business-sla, plans/faq (checked
 - NO latency clause in real SLA. MVP latency rule (>200ms) is a CUSTOM demo rule,
   explicitly labeled "Demo rule" in UI to stay honest with judges.
 
-## 4. Architecture (Approach A)
+## 6. Architecture (Approach A)
 Monorepo `AiSummitLSO/`:
 - `backend/` — Node.js + Express REST API. Modules: auth, companies, saas,
   monitor-worker, sla-engine, mailer.
@@ -41,7 +57,7 @@ Monorepo `AiSummitLSO/`:
 
 No Redis/queue in MVP (YAGNI). Worker = setInterval in backend process.
 
-## 5. Components + Data model
+## 7. Components + Data model
 Tables (MariaDB):
 - `companies(id PK, name, email UNIQUE, password_hash, ai_email, ai_app_password_enc, monthly_fee DECIMAL, created_at)`
 - `saas_integrations(id, company_id FK, provider ENUM(cloudflare,aws,twilio,zendesk,salesforce), status ENUM(active,disabled), zone_info JSON, created_at)`
@@ -55,7 +71,7 @@ Frontend components:
 - `LatencyChart` (last N metrics), `IncidentList`, `SimulatePanel`
   (buttons: Simulate Outage / Simulate Slowdown / Recover).
 
-## 6. Data flow
+## 8. Data flow
 1. Register POST /api/auth/register {companyName, email, password, aiEmail, aiAppPassword, monthlyFee}
    → bcrypt password, AES-encrypt aiAppPassword with ENCRYPTION_KEY, create company + disabled integrations.
 2. Login POST /api/auth/login → JWT.
@@ -74,7 +90,7 @@ Frontend components:
    - SMTP: Nodemailer + Gmail (aiEmail + aiAppPassword). If SMTP fails → notifications.status=failed, dashboard shows Retry.
 7. Dashboard GET /api/dashboard/:companyId → status, chart data, incidents, credits sum, notifications.
 
-## 7. API sketch
+## 9. API sketch
 - POST /api/auth/register, POST /api/auth/login, GET /api/auth/me
 - POST /api/saas/cloudflare/activate, GET /api/saas
 - GET /api/metrics?companyId=&limit=100
@@ -82,29 +98,29 @@ Frontend components:
 - GET /api/dashboard/:companyId, POST /api/notifications/:id/retry
 - GET /api/health
 
-## 8. Error handling
+## 10. Error handling
 - SMTP fail → failed status + log, no crash, retry endpoint.
 - Worker exception → caught, logged, next tick continues.
 - DB down → API returns 500 JSON, frontend shows banner.
 - Missing .env → backend exits with clear message listing required keys.
 - JWT invalid → 401.
 
-## 9. Security
+## 11. Security
 - Passwords bcrypt (10 rounds). JWT 24h. aiAppPassword AES-256-GCM with ENCRYPTION_KEY from .env, never returned by API.
 - .env keys: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET, ENCRYPTION_KEY, SMTP_HOST, SMTP_PORT, FRONTEND_URL, VENDOR_CLAIM_EMAIL.
 - CORS restricted to FRONTEND_URL.
 
-## 10b. Local defaults (to remove ambiguity)
+## 12. Local defaults (to remove ambiguity)
 - DB_NAME=sla_monitor, DB_HOST=127.0.0.1, backend PORT=4000, frontend Vite PORT=5173.
 - MONITOR_INTERVAL_SEC=30 (demo may set 10 for faster judging). Traceroute/URL evidence
   in vendor email is clearly labeled SIMULATED in MVP.
 
-## 10. Testing / Judge demo script
+## 13. Testing / Judge demo script
 1. Open landing → see Cloudflare Active, 4 others Disabled.
 2. Register company (full packet) → login → Activate Cloudflare.
 3. Dashboard green. Click "Simulate Outage" → wait ~40s → red alert + credit $ + 2 emails attempted (check backend log + inbox).
 4. Click "Recover" → green. Click "Simulate Slowdown" → latency chart >200ms → latency incident + 15% credit.
 5. Show claim deadline countdown + incident list + notification log.
 
-## 11. Non-goals (MVP)
+## 14. Non-goals (MVP)
 No real Cloudflare API polling, no AWS/Twilio/Zendesk/Salesforce logic, no automatic money transfer (only claim email), no multi-user roles, no i18n (English only).

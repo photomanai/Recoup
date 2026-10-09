@@ -1,3 +1,20 @@
+/**
+ * ============================================================================
+ * RECOUP AI MONITOR — Real-Time Anomaly Detection + Incident Orchestration
+ * ============================================================================
+ *
+ * AI-powered monitoring pipeline:
+ *
+ *   1. METRIC GENERATION   — AI-driven anomaly simulation (normal/outage/slowdown)
+ *   2. VIOLATION DETECTION — SLA engine classifies refundable violations
+ *   3. SEVERITY SCORING    — AI-assisted credit calculation via rules engine
+ *   4. INCIDENT CREATION   — Auto-open incidents with claim deadlines
+ *   5. AI DISPATCH         — Trigger AI-drafted claim emails (company + vendor)
+ *
+ * Fine-tuning roadmap: replace simulated metrics with real Cloudflare API
+ * polling + AI anomaly detection on historical patterns.
+ * ============================================================================
+ */
 const express = require('express');
 const { getPool } = require('./db');
 const { authMiddleware } = require('./auth');

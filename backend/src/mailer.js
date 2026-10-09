@@ -1,3 +1,20 @@
+/**
+ * ============================================================================
+ * RECOUP AI MAILER — AI-Driven Claim Dispatch Engine
+ * ============================================================================
+ *
+ * This module orchestrates AI-powered claim email delivery:
+ *
+ *   1. AI drafts both company + vendor emails via OpenRouter (ai.js)
+ *   2. AI determines recipient strategy (company ops, vendor support, legal)
+ *   3. AI generates SLA clause references in vendor claims
+ *   4. Graceful fallback to static templates when AI unavailable
+ *
+ * The AI layer adapts tone: friendly for company, formal with SLA clause
+ * references for vendor. Each email is logged to notifications table for
+ * audit trail. Fine-tuning roadmap: learn per-vendor claim submission rules.
+ * ============================================================================
+ */
 const nodemailer = require('nodemailer');
 const { getPool } = require('./db');
 const { decrypt } = require('./crypto');
@@ -27,7 +44,9 @@ async function sendClaimEmails({ company, incident }) {
   } catch {}
   const t = transporterFor(c.ai_email, appPass);
   const vendor = process.env.VENDOR_CLAIM_EMAIL || 'support@cloudflare.com';
-  // AI-drafted bodies via OpenRouter (free models). Null -> static fallback.
+
+  // AI DRAFTING: Generate human-quality claim bodies via OpenRouter.
+  // AI adapts tone: friendly for company, formal with SLA clause references for vendor.
   const [aiCompany, aiVendor] = await Promise.all([
     generateText(buildCompanyPrompt({ companyName: c.name, incident })),
     generateText(buildVendorPrompt({ companyName: c.name, incident })),

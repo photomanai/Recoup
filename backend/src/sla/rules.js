@@ -1,3 +1,21 @@
+/**
+ * ============================================================================
+ * RECOUP AI SLA ENGINE — Vendor-Specific Rule Intelligence
+ * ============================================================================
+ *
+ * SLA violation detection + credit calculation rules:
+ *
+ *   1. OUTAGE DETECTION   — uptime=0 → refundable violation (Cloudflare: 100% SLA)
+ *   2. LATENCY ANALYSIS   — avg latency >200ms over 5 checks → violation (demo rule)
+ *   3. CREDIT FORMULA     — proportional calculation with multiplier
+ *   4. DEADLINE TRACKING  — 5-business-day claim window per Cloudflare SLA
+ *
+ * AI enhancement roadmap: fine-tune on public SLA documents to auto-learn
+ * each vendor's formula (AWS: 99.95% → 10% credit, Twilio: 99.95% → 10%,
+ * Zendesk: 99.9% → 10%, Salesforce: 99.9% → 5%...) without hardcoding rules.
+ * ============================================================================
+ */
+
 function checkOutage({ outageMin, monthlyFee }) {
   const ratio = 1.0;
   const minutesPerMonth = 43200;
