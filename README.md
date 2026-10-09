@@ -48,11 +48,30 @@ npm --prefix frontend install
 npm --prefix frontend run dev          # UI http://localhost:5173
 ```
 
-Backend tests (server must run for health test):
+Backend tests (server must run for health test). 33 node:test cases covering
+SLA math, crypto tamper-detection, auth middleware, AI prompts, and schema:
 
 ```bash
 node backend/src/index.js & sleep 2; node --test backend/tests/*.test.js; kill %1
 ```
+
+### Quality testing — what we tested, what broke
+
+| Area | Tested | What broke / caught |
+|------|--------|---------------------|
+| SLA engine | Outage credit formula (exact $, zero, full-month cap), latency 200ms boundary, <5 samples, claim deadline +7d format | Boundary case: avg **exactly 200ms is NOT a violation** (rule is `>200`) — confirmed, not a bug |
+| Crypto | AES-256-GCM roundtrip, **tampered ciphertext rejected**, garbage payload throws, unique IV per encryption | Auth-tag verification rejects modified data — no silent corruption (NDSS-style) |
+| Auth middleware | Valid token passes, missing/invalid/expired/tampered token → 401 | All unauthorized paths return 401 before hitting DB |
+| AI prompts | Vendor prompt references SLA clauses (100% uptime, 5-business-day), evidence fields, word budget, no placeholders | Prompt templates verified inject-only (no user-controlled eval) |
+| DB schema | All 5 tables, columns, ENUM provider list, ≥4 cascade FKs, metrics composite index | Schema enforces referential integrity — orphaned incidents impossible |
+| End-to-end | Register → Activate → Simulate Outage/Slowdown → incident + 2 emails (log mode) → Recover | Mock Gmail creds in log mode never hit SMTP; real SMTP requires valid App Password |
+
+**Comparison vs current approach:** existing practice is "trusting the vendor's SLA
+dashboard and manually filing claims if someone remembers at month-end — usually nobody
+does." Recoup adds (1) automated SLA-scoring against documented clauses, (2) dual
+AI-drafted claim emails, (3) deadline guard — turning a manual, forgotten process into a
+3-click refund pipeline. Honest gaps: metrics are simulated (no live Cloudflare API),
+vendor email address is a placeholder for MVP.
 
 ## 5-step judge demo (3 min)
 
