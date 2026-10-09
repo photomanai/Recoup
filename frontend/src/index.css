@@ -113,7 +113,7 @@ input {
 input:focus { outline: none; border-color: var(--deep); box-shadow: 0 0 0 3px rgba(56, 133, 171, 0.18); }
 label { font-size: 12px; color: var(--steel); letter-spacing: .1em; font-weight: 700; }
 .nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; }
-.logo { font-weight: 800; font-size: 22px; color: var(--black); letter-spacing: -0.02em; }
+.logo { font-weight: 800; font-size: 19px; color: var(--black); letter-spacing: -0.02em; }
 .logo span { color: var(--deep); }
 .nav a { color: var(--sea); text-decoration: none; margin-left: 16px; font-size: 14px; font-weight: 600; }
 .nav a:hover { color: var(--ink); }
@@ -129,7 +129,7 @@ label { font-size: 12px; color: var(--steel); letter-spacing: .1em; font-weight:
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
-.topbar-in { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+.topbar-in { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; padding-bottom: 8px; }
 .top-links { display: flex; gap: 22px; }
 .top-links a { color: var(--sea); text-decoration: none; font-size: 14px; font-weight: 600; margin: 0; }
 .top-links a:hover { color: var(--ink); }
@@ -137,7 +137,7 @@ label { font-size: 12px; color: var(--steel); letter-spacing: .1em; font-weight:
 .top-cta .quiet { color: var(--sea); text-decoration: none; font-size: 14px; font-weight: 600; margin: 0; }
 .gh {
   display: inline-flex; align-items: center; gap: 8px;
-  border: 1px solid var(--ink); border-radius: 999px; padding: 8px 14px;
+  border: 1px solid var(--ink); border-radius: 999px; padding: 6px 12px;
   color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 700;
   transition: background 0.2s ease, color 0.2s ease;
 }
