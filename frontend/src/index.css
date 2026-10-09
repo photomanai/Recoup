@@ -257,3 +257,63 @@ label { font-size: 12px; color: var(--steel); letter-spacing: .1em; font-weight:
   .hv-spike { opacity: 1; animation: none; }
   .marquee-track { animation: none; }
 }
+
+/* ---------- Recoup dashboard ---------- */
+.dash-head { padding: 48px 0 6px; }
+.dash-head h1 { font-size: clamp(34px, 5vw, 54px); }
+.ops-hero {
+  display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 28px; align-items: center;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 22px; padding: 30px; margin-top: 22px;
+  box-shadow: 0 4px 20px rgba(24, 80, 121, 0.07);
+  position: relative; overflow: hidden;
+}
+.ops-hero::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: linear-gradient(90deg, var(--mist), var(--fog), var(--sea));
+}
+.ops-hero.on { background: var(--ink); border-color: var(--ink); color: var(--paper); box-shadow: 0 18px 50px rgba(24, 80, 121, 0.35); }
+.ops-hero.on p { color: var(--mist); }
+.ops-hero h2 { margin: 10px 0 8px; font-size: 28px; color: var(--black); }
+.ops-hero.on h2 { color: var(--paper); }
+.ops-hero p { margin: 0; color: var(--mut); font-size: 14px; line-height: 1.65; max-width: 460px; }
+.ops-side { display: grid; gap: 4px; justify-items: end; text-align: right; }
+.ops-side span { font-size: 12px; color: var(--steel); letter-spacing: 0.08em; }
+.ops-hero.on .ops-side span { color: var(--mist); }
+.ops-num { font-size: 52px; font-weight: 800; color: var(--black); line-height: 1; }
+.ops-hero.on .ops-num { color: var(--paper); }
+.ops-side .btn { margin-top: 12px; }
+.ops-hero:not(.on) .btn { background: var(--ink); }
+.dash-msg { color: var(--deep); font-size: 14px; font-weight: 600; margin: 14px 2px 0; }
+
+.stats-dash { margin-top: 22px; }
+
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 6px; }
+.panel-head strong { font-size: 17px; color: var(--black); }
+.panel-head p { margin: 4px 0 0; color: var(--mut); font-size: 13px; }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+  background: var(--mist); color: var(--ink); border: 1px solid transparent;
+}
+.tag .dot { margin: 0; }
+.tag.normal, .tag.recovered, .tag.sent, .tag.active, .tag.company { background: rgba(14, 124, 91, 0.12); color: var(--ok); }
+.tag.outage { background: rgba(210, 74, 67, 0.12); color: var(--red); }
+.tag.latency, .tag.slowdown, .tag.vendor, .tag.open { background: rgba(56, 133, 171, 0.14); color: var(--deep); }
+.tag.failed { background: rgba(210, 74, 67, 0.12); color: var(--red); }
+.tag.claimed { background: rgba(185, 127, 31, 0.14); color: var(--amber); }
+.tag.count, .tag.disabled, .tag.ok { background: var(--mist); color: var(--ink); }
+td .mono.strong { font-weight: 600; color: var(--black); }
+td.empty { color: var(--steel); font-size: 13px; }
+
+.scenario { margin-top: 18px; border-top: 1px dashed var(--line); padding-top: 16px; }
+.scenario-h { font-size: 11px; font-weight: 800; letter-spacing: 0.18em; color: var(--steel); margin-bottom: 12px; }
+
+.saas-row .saas-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+@media (max-width: 900px) {
+  .ops-hero { grid-template-columns: 1fr; }
+  .ops-side { justify-items: start; text-align: left; }
+}
