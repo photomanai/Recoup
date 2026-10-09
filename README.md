@@ -22,7 +22,7 @@ company and the vendor with a ready-to-file claim — plus a dashboard with esti
 ## Run
 
 ```bash
-mariadb -uroot -p'MyMan??024' < db/schema.sql
+mariadb -uroot -p'Test1234!' < db/schema.sql
 cp backend/.env.example backend/.env   # set JWT_SECRET + ENCRYPTION_KEY + AI Gmail creds per company via UI
 npm --prefix backend install
 node backend/src/index.js              # API http://localhost:4000 (MONITOR_INTERVAL_SEC=30, demo: 10)
