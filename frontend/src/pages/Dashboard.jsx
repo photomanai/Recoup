@@ -196,6 +196,7 @@ export default function Dashboard() {
               </div>
               <span className="tag count">{data.incidents.length} total</span>
             </div>
+            <div className="table-scroll">
             <table>
               <thead>
                 <tr>
@@ -229,6 +230,7 @@ export default function Dashboard() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </Reveal>
 
@@ -241,6 +243,7 @@ export default function Dashboard() {
               </div>
               <span className="tag count">{data.notifications.length} sent</span>
             </div>
+            <div className="table-scroll">
             <table>
               <thead>
                 <tr>
@@ -272,6 +275,7 @@ export default function Dashboard() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </Reveal>
 
