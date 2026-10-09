@@ -18,6 +18,13 @@ Recoup uses a **multi-stage AI pipeline** at every step of the SLA refund workfl
 
 **Models used:** OpenRouter free tier — `meta-llama/llama-3.3-70b-instruct:free`, `mistralai/mistral-7b-instruct:free` (email drafting). Falls back to static templates when no API key.
 
+**What AI actually contributes:** the violation isn't just detected — AI writes the
+claim. One friendly briefing to your ops/finance team with the dollar figure and
+deadline, one formal SLA-clause-referencing claim to the vendor with duration, URL
+and evidence fields. Two audiences, two tones, one incident — drafted by AI in
+~seconds, at $0 cost on free-tier models. Full detail in
+[`docs/AI-ARCHITECTURE.md`](docs/AI-ARCHITECTURE.md).
+
 **Fine-tuning roadmap:** Train a vendor-specific model on public SLA documents + successful claim examples to automatically learn claim submission rules for each SaaS provider (AWS, Twilio, Zendesk, Salesforce, etc.) — making the AI smarter about what evidence each vendor requires and how to format claims for maximum approval rate.
 
 ## Real Cloudflare SLA (researched 2026-10-09)
@@ -97,6 +104,21 @@ vendor email address is a placeholder for MVP.
 | MONITOR_INTERVAL_SEC | worker tick (30 prod, 5–10 demo) |
 | OPENROUTER_API_KEY | **AI engine key** — enables AI-drafted claim emails |
 | OPENROUTER_MODEL | AI model selection (default `openrouter/free`) |
+
+## Why Recoup is different
+
+- Monitoring tools (Datadog, PagerDuty) tell you the site is **down** — Recoup tells
+  you the site is down **and files the refund you're owed for it**.
+- Cost tools (Vantage, CloudZero) track what you spend — they never recover credits
+  you're contractually owed for downtime.
+- **Recoup is the only layer that connects all three dots:** monitoring → SLA clause
+  matching → AI-drafted, evidence-packaged claim emailed to both sides at once.
+- The 5-business-day CLAIM WINDOW is modelled per incident so a claim never expires
+  silently — the #1 reason credits go uncollected.
+
+> In one line: monitoring tells you the site is down; Recoup tells you the site is
+> down **and files the refund it owes you — with AI writing both sides of the
+> conversation.** Full analysis in [`docs/ORIGINALITY.md`](docs/ORIGINALITY.md).
 
 ## Future — Fine-Tuned Vendor Intelligence
 
