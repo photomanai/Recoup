@@ -25,9 +25,14 @@ if [ -z "${DB_PASSWORD:-}" ]; then
   read -rsp "MariaDB password for '$DB_USER'@$DB_HOST: " DB_PASSWORD; echo
 fi
 
-echo "==> [3/5] Creating database + tables ($DB_NAME)..."
+echo "==> [3/5] Database check ($DB_NAME)..."
 export MYSQL_PWD="$DB_PASSWORD"
-$DBCLI -h "$DB_HOST" -u "$DB_USER" < db/schema.sql
+if $DBCLI -h "$DB_HOST" -u "$DB_USER" -e "SHOW TABLES FROM \`$DB_NAME\`;" 2>/dev/null | grep -q "companies"; then
+  echo "    database '$DB_NAME' already exists, skipping creation."
+else
+  echo "    creating database + tables..."
+  $DBCLI -h "$DB_HOST" -u "$DB_USER" < db/schema.sql
+fi
 $DBCLI -h "$DB_HOST" -u "$DB_USER" -e "SHOW TABLES FROM $DB_NAME;"
 unset MYSQL_PWD
 
@@ -42,13 +47,21 @@ else
   echo "    exists, kept as-is."
 fi
 
-echo "==> [5/5] Running backend tests (starts temp API on :4000)..."
-(node backend/src/index.js >/tmp/recoup-install-api.log 2>&1 & echo $! > /tmp/recoup-install-api.pid)
+echo "==> [5/5] Running backend tests (starts temp API on \$HOST:\$PORT)..."
+# HOST/PORT: env-dən, yoxdursa backend/.env-dən, o da yoxdursa default (0.0.0.0:4000)
+APP_HOST="${HOST:-$(grep -E '^HOST=' backend/.env 2>/dev/null | cut -d= -f2)}"
+APP_HOST="${APP_HOST:-0.0.0.0}"
+APP_PORT="${PORT:-$(grep -E '^PORT=' backend/.env 2>/dev/null | cut -d= -f2)}"
+APP_PORT="${APP_PORT:-4000}"
+# 0.0.0.0-ə qulaq asanda health check 127.0.0.1-ə gedir
+HEALTH_HOST="$APP_HOST"
+[ "$HEALTH_HOST" = "0.0.0.0" ] && HEALTH_HOST="127.0.0.1"
+(HOST="$APP_HOST" PORT="$APP_PORT" node backend/src/index.js >/tmp/recoup-install-api.log 2>&1 & echo $! > /tmp/recoup-install-api.pid)
 sleep 2
-node --test backend/tests/*.test.js
+HOST="$APP_HOST" PORT="$APP_PORT" node --test backend/tests/*.test.js
 kill "$(cat /tmp/recoup-install-api.pid)"
 
 echo
 echo "Backend READY. Run it:"
-echo "  MONITOR_INTERVAL_SEC=10 MAIL_MODE=log node backend/src/index.js"
-echo "  health: curl http://127.0.0.1:4000/api/health"
+echo "  HOST=$APP_HOST PORT=$APP_PORT MONITOR_INTERVAL_SEC=10 MAIL_MODE=log node backend/src/index.js"
+echo "  health: curl http://$HEALTH_HOST:$APP_PORT/api/health"

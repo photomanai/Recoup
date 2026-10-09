@@ -33,13 +33,14 @@ const monitor = require('./monitor');
 app.use('/api', monitor.router);
 app.use('/api/dashboard', require('./dashboard'));
 
+const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 4000;
 
 if (require.main === module) {
   requireEnv(['JWT_SECRET', 'ENCRYPTION_KEY']);
   initDb().catch(() => {});
   monitor.startWorker();
-  app.listen(PORT, () => console.log('API on ' + PORT));
+  app.listen(PORT, HOST, () => console.log('API on ' + HOST + ':' + PORT));
 }
 
 module.exports = app;
