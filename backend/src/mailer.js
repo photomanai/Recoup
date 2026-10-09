@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const { getPool } = require('./db');
 const { decrypt } = require('./crypto');
+const { buildCompanyPrompt, buildVendorPrompt, generateText } = require('./ai');
 
 function transporterFor(aiEmail, appPass) {
   return nodemailer.createTransport({
@@ -26,18 +27,29 @@ async function sendClaimEmails({ company, incident }) {
   } catch {}
   const t = transporterFor(c.ai_email, appPass);
   const vendor = process.env.VENDOR_CLAIM_EMAIL || 'support@cloudflare.com';
+  // AI-drafted bodies via OpenRouter (free models). Null -> static fallback.
+  const [aiCompany, aiVendor] = await Promise.all([
+    generateText(buildCompanyPrompt({ companyName: c.name, incident })),
+    generateText(buildVendorPrompt({ companyName: c.name, incident })),
+  ]);
+  if (aiCompany || aiVendor) console.log('[MAIL-AI] bodies drafted by', process.env.OPENROUTER_MODEL || 'openrouter/free');
+  else console.log('[MAIL-STATIC] templates used (no OpenRouter key or unreachable)');
   const mails = [
     {
       to: c.email,
       kind: 'company',
       subject: `SLA violation: estimated $${incident.credit_usd} refund`,
-      text: `Hi ${c.name},\n\nWe detected ${incident.type} at ${incident.started_at}.\nEstimated refund: $${incident.credit_usd}.\nClaim deadline: ${incident.claim_deadline}.\n\nThis is a SIMULATED MVP alert.`,
+      text:
+        aiCompany ||
+        `Hi ${c.name},\n\nWe detected ${incident.type} at ${incident.started_at}.\nEstimated refund: $${incident.credit_usd}.\nClaim deadline: ${incident.claim_deadline}.\n\nThis is a SIMULATED MVP alert.`,
     },
     {
       to: vendor,
       kind: 'vendor',
       subject: `SLA Claim [SIMULATED] ${incident.type} ${incident.started_at}`,
-      text: `To Cloudflare Support,\n\nIncident: ${incident.type}\nDuration: ${incident.duration_min} min\nAffected: example.com\nTraceroute: SIMULATED\nSteps taken: auto-monitor detected.\nClaim deadline: ${incident.claim_deadline}\n\nRegards,\n${c.name}`,
+      text:
+        aiVendor ||
+        `To Cloudflare Support,\n\nIncident: ${incident.type}\nDuration: ${incident.duration_min} min\nAffected: example.com\nTraceroute: SIMULATED\nSteps taken: auto-monitor detected.\nClaim deadline: ${incident.claim_deadline}\n\nRegards,\n${c.name}`,
     },
   ];
   for (const m of mails) {
